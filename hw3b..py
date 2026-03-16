@@ -1,0 +1,94 @@
+import math
+
+def km(m):
+    """
+    Compute K_m constant
+
+    Parameters:
+        m: degrees of freedom
+
+    Returns:
+        value of K_m (float)
+    """
+    return math.gamma((m + 1) / 2) / (math.sqrt(m * math.pi) * math.gamma(m / 2))
+
+
+def t_pdf(u, m):
+    """
+    Probability density function for the t-distribution.
+
+    Parameters:
+        u: variable (float)
+        m: degrees of freedom
+
+    Returns:
+        PDF value at u (float)
+    """
+    return (1 + u ** 2 / m) ** (-(m + 1) / 2)
+
+
+def simpson_integral(f, a, b, n, m):
+    """
+    Approximate integral of f(u, m) from a to b using Simpson's 1/3 rule.
+
+    Parameters:
+        f: function f(u, m)
+        a: lower limit (float)
+        b: upper limit (float)
+        n: number of intervals (must be even)
+        m: degrees of freedom passed to f
+
+    Returns:
+        approximate integral (float)
+    """
+    if n % 2 == 1:
+        n += 1  # make sure n is even
+    h = (b - a) / n
+    s = f(a, m) + f(b, m)
+    for i in range(1, n):
+        coef = 4 if i % 2 == 1 else 2
+        s += coef * f(a + i * h, m)
+    return s * h / 3
+
+
+def t_cdf(z, m, n=1000):
+    """
+    Calculate cumulative probability for t-distribution with m degrees of freedom.
+
+    Parameters:
+        z: t-value (float)
+        m: degrees of freedom
+        n: number of intervals for Simpson's rule
+
+    Returns:
+        probability F(z) (float)
+    """
+    from scipy.integrate import quad  # optional, in case you need more precise integration
+    integral = simpson_integral(t_pdf, -20, z, n, m)
+    return km(m) * integral
+
+
+# Preserve your original CLI functionality if you run this file directly
+if __name__ == "__main__":
+    print("t-distribution CDF calculator using gamma function")
+
+    while True:
+        try:
+            # Get degrees of freedom
+            m = int(input("Enter degrees of freedom (m) or 0 to quit: "))
+            if m == 0:
+                print("Exiting program.")
+                break
+            if m < 1:
+                print("Degrees of freedom must be positive integer.")
+                continue
+
+            # Get z-value
+            z = float(input("Enter t-value (z): "))
+
+            # Compute probability
+            prob = t_cdf(z, m)
+            print(f"F(z) for m={m} and z={z} is approximately {prob:.6f}\n")
+
+        except ValueError:
+            print("Invalid input. Please enter numeric values.\n")
